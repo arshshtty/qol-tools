@@ -1,0 +1,17 @@
+{
+  "watchPath": "./watch",
+  "sortedPath": "./sorted",
+  "categories": {
+    "images": [".jpg", ".jpeg", ".png", ".gif", ".svg", ".webp", ".bmp", ".ico"],
+    "documents": [".pdf", ".doc", ".docx", ".txt", ".md", ".rtf", ".odt", ".xls", ".xlsx", ".ppt", ".pptx"],
+    "videos": [".mp4", ".avi", ".mkv", ".mov", ".wmv", ".flv", ".webm"],
+    "audio": [".mp3", ".wav", ".flac", ".m4a", ".aac", ".ogg", ".wma"],
+    "archives": [".zip", ".tar", ".gz", ".rar", ".7z", ".bz2", ".xz"],
+    "code": [".js", ".ts", ".py", ".java", ".cpp", ".c", ".h", ".go", ".rs", ".rb", ".php", ".swift"],
+    "executables": [".exe", ".dmg", ".app", ".deb", ".rpm", ".AppImage"],
+    "fonts": [".ttf", ".otf", ".woff", ".woff2"]
+  },
+  "ignoredExtensions": [".tmp", ".part", ".crdownload"],
+  "port": 3001,
+  "duplicateCheckEnabled": true
+}

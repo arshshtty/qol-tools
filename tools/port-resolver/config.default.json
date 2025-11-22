@@ -1,0 +1,12 @@
+{
+  "scanRanges": [
+    { "start": 1, "end": 1024, "name": "System Ports" },
+    { "start": 3000, "end": 3010, "name": "Development Ports" },
+    { "start": 5000, "end": 5010, "name": "Flask/Django" },
+    { "start": 8000, "end": 8090, "name": "Common Web Ports" },
+    { "start": 9000, "end": 9100, "name": "Alternative Ports" }
+  ],
+  "port": 3002,
+  "refreshInterval": 5000,
+  "preferences": {}
+}

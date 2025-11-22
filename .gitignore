@@ -1,0 +1,26 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+.DS_Store
+coverage/
+.vscode/
+.idea/
+
+# Tool-specific configs (keep defaults)
+tools/*/config.json
+tools/*/preferences.json
+
+# Download Manager
+tools/download-manager/sorted/
+tools/download-manager/watch/
+tools/download-manager/history.json
+
+# Port Resolver
+tools/port-resolver/logs/
+
+# OS
+Thumbs.db
+.AppleDouble
+.LSOverride

@@ -1,0 +1,32 @@
+{
+  "3000": {
+    "name": "React Dev Server",
+    "description": "Frontend development server",
+    "color": "#61dafb"
+  },
+  "3001": {
+    "name": "Download Manager",
+    "description": "QOL Tools - Download Manager",
+    "color": "#10b981"
+  },
+  "3002": {
+    "name": "Port Resolver",
+    "description": "QOL Tools - Port Resolver",
+    "color": "#8b5cf6"
+  },
+  "5000": {
+    "name": "Flask/Python API",
+    "description": "Python backend server",
+    "color": "#3776ab"
+  },
+  "8080": {
+    "name": "Backend API",
+    "description": "Express/Node backend",
+    "color": "#68a063"
+  },
+  "9000": {
+    "name": "Alternative Server",
+    "description": "Backup development port",
+    "color": "#f59e0b"
+  }
+}

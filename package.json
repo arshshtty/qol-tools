@@ -1,0 +1,19 @@
+{
+  "name": "qol-tools",
+  "version": "1.0.0",
+  "description": "Quality of life tools for day-to-day development",
+  "private": true,
+  "workspaces": [
+    "tools/*",
+    "web-ui"
+  ],
+  "scripts": {
+    "dev:download-manager": "cd tools/download-manager && npm run dev",
+    "dev:port-resolver": "cd tools/port-resolver && npm run dev",
+    "dev:ui": "cd web-ui && npm run dev",
+    "install:all": "npm install && npm install --workspaces"
+  },
+  "keywords": ["productivity", "developer-tools", "qol"],
+  "author": "",
+  "license": "MIT"
+}

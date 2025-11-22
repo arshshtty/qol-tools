@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Port Resolver</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #8b5cf6;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      color: #666;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+    }
+
+    .tab.active {
+      color: #8b5cf6;
+      border-bottom-color: #8b5cf6;
+    }
+
+    .content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .port-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .port-table th {
+      text-align: left;
+      padding: 12px;
+      background: #f9fafb;
+      border-bottom: 2px solid #e5e7eb;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .port-table td {
+      padding: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .port-table tr:hover {
+      background: #f9fafb;
+    }
+
+    .port-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .port-preferred {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .port-conflict {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .port-unknown {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .action-btn {
+      padding: 6px 12px;
+      margin-right: 5px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .btn-kill {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-kill:hover {
+      background: #dc2626;
+    }
+
+    .btn-save {
+      background: #8b5cf6;
+      color: white;
+    }
+
+    .btn-save:hover {
+      background: #7c3aed;
+    }
+
+    .btn-delete {
+      background: #6b7280;
+      color: white;
+    }
+
+    .btn-delete:hover {
+      background: #4b5563;
+    }
+
+    .preferences-list {
+      list-style: none;
+    }
+
+    .pref-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .pref-info {
+      flex: 1;
+    }
+
+    .pref-port {
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+
+    .pref-name {
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .pref-desc {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .add-pref-form {
+      background: #f9fafb;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .conflict-banner {
+      background: #fee2e2;
+      border: 1px solid #fecaca;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      color: #991b1b;
+    }
+
+    .process-name {
+      font-family: 'Monaco', 'Courier New', monospace;
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .port-color {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🔌 Port Resolver</h1>
+      <p id="status">Loading...</p>
+    </header>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="ports">Active Ports</button>
+      <button class="tab" data-tab="preferences">Preferences</button>
+      <button class="tab" data-tab="conflicts">Conflicts</button>
+    </div>
+
+    <div class="content">
+      <div id="ports-tab" class="tab-content">
+        <table class="port-table">
+          <thead>
+            <tr>
+              <th>Port</th>
+              <th>Process</th>
+              <th>PID</th>
+              <th>User</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ports-list">
+            <tr><td colspan="6" class="loading">Scanning ports...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="preferences-tab" class="tab-content" style="display: none;">
+        <div class="add-pref-form">
+          <h3 style="margin-bottom: 15px;">Add Port Preference</h3>
+          <div class="form-group">
+            <label>Port Number</label>
+            <input type="number" id="pref-port" placeholder="3000">
+          </div>
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="pref-name" placeholder="React Dev Server">
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <input type="text" id="pref-description" placeholder="Frontend development server">
+          </div>
+          <div class="form-group">
+            <label>Color (optional)</label>
+            <input type="color" id="pref-color" value="#8b5cf6">
+          </div>
+          <button class="action-btn btn-save" onclick="addPreference()">Add Preference</button>
+        </div>
+
+        <ul class="preferences-list" id="preferences-list">
+          <li class="loading">Loading preferences...</li>
+        </ul>
+      </div>
+
+      <div id="conflicts-tab" class="tab-content" style="display: none;">
+        <div id="conflicts-list">
+          <div class="loading">Checking for conflicts...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = '';
+    let currentTab = 'ports';
+    let preferences = {};
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        switchTab(tab.dataset.tab);
+      });
+    });
+
+    function switchTab(tabName) {
+      currentTab = tabName;
+
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.style.display = 'none';
+      });
+      document.getElementById(`${tabName}-tab`).style.display = 'block';
+
+      if (tabName === 'ports') loadPorts();
+      else if (tabName === 'preferences') loadPreferences();
+      else if (tabName === 'conflicts') loadConflicts();
+    }
+
+    // Load status
+    async function loadStatus() {
+      try {
+        const res = await fetch(`${API_URL}/api/status`);
+        const data = await res.json();
+
+        document.getElementById('status').textContent =
+          `Platform: ${data.platform} • ${data.totalPorts} active ports • Refresh: ${data.refreshInterval}ms`;
+
+        const statsHTML = `
+          <div class="stat-card">
+            <div class="stat-label">Active Ports</div>
+            <div class="stat-value">${data.totalPorts}</div>
+          </div>
+        `;
+
+        document.getElementById('stats').innerHTML = statsHTML;
+      } catch (error) {
+        console.error('Error loading status:', error);
+      }
+    }
+
+    // Load ports
+    async function loadPorts() {
+      try {
+        const res = await fetch(`${API_URL}/api/ports/cached`);
+        const data = await res.json();
+
+        const tbody = document.getElementById('ports-list');
+
+        if (data.ports.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No active ports found</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.ports.map(port => {
+          const pref = preferences[port.port];
+          let statusBadge = '<span class="port-badge port-unknown">Unknown</span>';
+
+          if (pref) {
+            statusBadge = `<span class="port-badge port-preferred">
+              <span class="port-color" style="background: ${pref.color || '#8b5cf6'}"></span>
+              ${pref.name}
+            </span>`;
+          }
+
+          return `
+            <tr>
+              <td><strong>${port.port}</strong></td>
+              <td><span class="process-name">${port.process}</span></td>
+              <td>${port.pid}</td>
+              <td>${port.user || '-'}</td>
+              <td>${statusBadge}</td>
+              <td>
+                <button class="action-btn btn-kill" onclick="killProcess(${port.pid}, ${port.port})">Kill</button>
+                ${!pref ? `<button class="action-btn btn-save" onclick="quickSavePreference(${port.port}, '${port.process}')">Save as Pref</button>` : ''}
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (error) {
+        console.error('Error loading ports:', error);
+      }
+    }
+
+    // Load preferences
+    async function loadPreferences() {
+      try {
+        const res = await fetch(`${API_URL}/api/preferences`);
+        const data = await res.json();
+        preferences = data.preferences;
+
+        const list = document.getElementById('preferences-list');
+
+        const entries = Object.entries(preferences);
+        if (entries.length === 0) {
+          list.innerHTML = '<li class="empty-state">No preferences saved yet</li>';
+          return;
+        }
+
+        list.innerHTML = entries.map(([port, pref]) => `
+          <li class="pref-item">
+            <div class="pref-info">
+              <div class="pref-port">
+                <span class="port-color" style="background: ${pref.color || '#8b5cf6'}"></span>
+                Port ${port}
+              </div>
+              <div class="pref-name">${pref.name}</div>
+              <div class="pref-desc">${pref.description || ''}</div>
+            </div>
+            <div>
+              <button class="action-btn btn-delete" onclick="deletePreference('${port}')">Delete</button>
+            </div>
+          </li>
+        `).join('');
+      } catch (error) {
+        console.error('Error loading preferences:', error);
+      }
+    }
+
+    // Load conflicts
+    async function loadConflicts() {
+      try {
+        const res = await fetch(`${API_URL}/api/conflicts`);
+        const data = await res.json();
+
+        const list = document.getElementById('conflicts-list');
+
+        if (data.conflicts.length === 0) {
+          list.innerHTML = '<div class="empty-state">✅ No conflicts detected!</div>';
+          return;
+        }
+
+        list.innerHTML = data.conflicts.map(conflict => `
+          <div class="conflict-banner">
+            <strong>⚠️ Port ${conflict.port} Conflict</strong><br>
+            Expected: ${conflict.expected.name}<br>
+            Actually running: <span class="process-name">${conflict.actual.process}</span> (PID ${conflict.actual.pid})<br>
+            <button class="action-btn btn-kill" style="margin-top: 10px;" onclick="killProcess(${conflict.actual.pid}, ${conflict.port})">Kill Process</button>
+          </div>
+        `).join('');
+      } catch (error) {
+        console.error('Error loading conflicts:', error);
+      }
+    }
+
+    // Add preference
+    async function addPreference() {
+      const port = document.getElementById('pref-port').value;
+      const name = document.getElementById('pref-name').value;
+      const description = document.getElementById('pref-description').value;
+      const color = document.getElementById('pref-color').value;
+
+      if (!port || !name) {
+        alert('Port and name are required');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/api/preferences/${port}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, description, color })
+        });
+
+        if (res.ok) {
+          document.getElementById('pref-port').value = '';
+          document.getElementById('pref-name').value = '';
+          document.getElementById('pref-description').value = '';
+          loadPreferences();
+        }
+      } catch (error) {
+        console.error('Error adding preference:', error);
+        alert('Error adding preference');
+      }
+    }
+
+    // Quick save preference
+    async function quickSavePreference(port, processName) {
+      const name = prompt(`Name for port ${port}:`, processName);
+      if (!name) return;
+
+      try {
+        const res = await fetch(`${API_URL}/api/preferences/${port}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            description: `Auto-saved from ${processName}`,
+            color: '#8b5cf6'
+          })
+        });
+
+        if (res.ok) {
+          await loadPreferences();
+          loadPorts();
+        }
+      } catch (error) {
+        console.error('Error saving preference:', error);
+        alert('Error saving preference');
+      }
+    }
+
+    // Delete preference
+    async function deletePreference(port) {
+      if (!confirm(`Delete preference for port ${port}?`)) return;
+
+      try {
+        const res = await fetch(`${API_URL}/api/preferences/${port}`, {
+          method: 'DELETE'
+        });
+
+        if (res.ok) {
+          loadPreferences();
+        }
+      } catch (error) {
+        console.error('Error deleting preference:', error);
+        alert('Error deleting preference');
+      }
+    }
+
+    // Kill process
+    async function killProcess(pid, port) {
+      if (!confirm(`Kill process ${pid} on port ${port}?`)) return;
+
+      try {
+        const res = await fetch(`${API_URL}/api/kill/${pid}`, {
+          method: 'POST'
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          alert('Process killed successfully');
+          setTimeout(loadPorts, 1000);
+        } else {
+          alert(`Error: ${data.message}`);
+        }
+      } catch (error) {
+        console.error('Error killing process:', error);
+        alert('Error killing process');
+      }
+    }
+
+    // Initial load
+    loadStatus();
+    loadPreferences().then(() => {
+      loadPorts();
+    });
+
+    // Refresh every 5 seconds
+    setInterval(() => {
+      loadStatus();
+      if (currentTab === 'ports') loadPorts();
+      else if (currentTab === 'conflicts') loadConflicts();
+    }, 5000);
+  </script>
+</body>
+</html>
