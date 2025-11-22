@@ -1,0 +1,10 @@
+{
+  "scanPath": ".",
+  "baseBranches": ["main", "master", "develop"],
+  "protectedBranches": ["main", "master", "develop", "staging", "production"],
+  "port": 3003,
+  "autoRefresh": true,
+  "refreshInterval": 30000,
+  "showUnmerged": true,
+  "groupByRepo": true
+}

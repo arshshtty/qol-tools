@@ -35,6 +35,22 @@ Scans for port conflicts and manages running services.
 
 ---
 
+### 3. Git Branch Cleaner
+Identify and clean up merged git branches across all your repositories.
+
+**Features:**
+- 🔍 Scan all local branches across multiple repos
+- ✅ Detect which branches are fully merged
+- 📅 Show last commit info (date, author, message)
+- 🗑️ Bulk delete merged branches
+- 🔒 Protect current branch and main/master
+- ⚠️ Clear warnings for unmerged branches
+- 🔄 Real-time refresh
+
+[**Documentation**](./tools/git-branch-cleaner/README.md) • **Port:** 3003
+
+---
+
 ## 🚀 Quick Start
 
 ### Install Dependencies
@@ -46,6 +62,7 @@ npm install
 # Install all tool dependencies
 cd tools/download-manager && npm install
 cd ../port-resolver && npm install
+cd ../git-branch-cleaner && npm install
 ```
 
 ### Run a Tool
@@ -64,6 +81,13 @@ npm run dev
 # Open http://localhost:3002
 ```
 
+**Git Branch Cleaner:**
+```bash
+cd tools/git-branch-cleaner
+npm run dev
+# Open http://localhost:3003
+```
+
 ### Run Multiple Tools
 
 Open separate terminals for each tool, or use a process manager like [PM2](https://pm2.keymetrics.io/):
@@ -72,9 +96,10 @@ Open separate terminals for each tool, or use a process manager like [PM2](https
 # Install PM2 globally
 npm install -g pm2
 
-# Start both tools
+# Start all tools
 pm2 start tools/download-manager/src/index.js --name download-manager
 pm2 start tools/port-resolver/src/index.js --name port-resolver
+pm2 start tools/git-branch-cleaner/src/index.js --name git-branch-cleaner
 
 # View logs
 pm2 logs
@@ -93,7 +118,12 @@ qol-tools/
 │   │   ├── public/           # Web UI
 │   │   └── package.json
 │   │
-│   └── port-resolver/        # Port conflict management
+│   ├── port-resolver/        # Port conflict management
+│   │   ├── src/              # Backend logic
+│   │   ├── public/           # Web UI
+│   │   └── package.json
+│   │
+│   └── git-branch-cleaner/   # Git branch cleanup
 │       ├── src/              # Backend logic
 │       ├── public/           # Web UI
 │       └── package.json
@@ -143,6 +173,7 @@ Each tool has its own configuration file:
 
 - **Download Manager:** `tools/download-manager/config.json`
 - **Port Resolver:** `tools/port-resolver/config.json`
+- **Git Branch Cleaner:** `tools/git-branch-cleaner/config.json`
 
 Copy `config.default.json` to `config.json` and customize.
 
@@ -173,6 +204,23 @@ Copy `config.default.json` to `config.json` and customize.
 **Port scanning is slow:**
 - Increase `refreshInterval` in config
 - Reduce scan ranges to only ports you care about
+
+### Git Branch Cleaner
+
+**No repositories found:**
+- Check that `scanPath` points to a directory containing git repos
+- The tool scans up to 3 levels deep
+- Ensure directories are readable
+
+**Can't delete branches:**
+- Ensure you're not on the branch you're trying to delete
+- Check if the branch is protected in config
+- You may need to force delete unmerged branches
+
+**Branch status incorrect:**
+- Click Refresh to update branch information
+- Ensure your base branches (main/master) are configured correctly
+- Check that the repository is in a clean state
 
 ## 📜 License
 

@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Git Branch Cleaner</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #10b981;
+    }
+
+    .actions {
+      background: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #10b981;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #059669;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+
+    .btn-secondary {
+      background: #6b7280;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #4b5563;
+    }
+
+    .filter-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex: 1;
+    }
+
+    .filter-controls label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 14px;
+    }
+
+    .filter-controls input[type="checkbox"] {
+      cursor: pointer;
+    }
+
+    .content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .repo-section {
+      margin-bottom: 30px;
+    }
+
+    .repo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      background: #f9fafb;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .repo-header:hover {
+      background: #f3f4f6;
+    }
+
+    .repo-name {
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .repo-path {
+      font-size: 12px;
+      color: #666;
+      font-family: 'Monaco', 'Courier New', monospace;
+    }
+
+    .repo-stats {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .branch-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .branch-table th {
+      text-align: left;
+      padding: 12px;
+      background: #f9fafb;
+      border-bottom: 2px solid #e5e7eb;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .branch-table td {
+      padding: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .branch-table tr:hover {
+      background: #f9fafb;
+    }
+
+    .branch-name {
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 14px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-right: 5px;
+    }
+
+    .badge-merged {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .badge-unmerged {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-current {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .badge-protected {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .commit-info {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .commit-date {
+      color: #999;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .checkbox-cell {
+      width: 40px;
+    }
+
+    .delete-preview {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .delete-preview h3 {
+      color: #991b1b;
+      margin-bottom: 10px;
+    }
+
+    .delete-preview ul {
+      list-style: none;
+      margin-bottom: 10px;
+    }
+
+    .delete-preview li {
+      padding: 5px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 13px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .ahead-behind {
+      font-size: 11px;
+      color: #666;
+      font-family: 'Monaco', 'Courier New', monospace;
+    }
+
+    .select-all-section {
+      padding: 10px 15px;
+      background: #f9fafb;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🌿 Git Branch Cleaner</h1>
+      <p id="status">Loading...</p>
+    </header>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="refreshData()">🔄 Refresh</button>
+      <button class="btn btn-danger" id="delete-btn" onclick="deleteSelected()" disabled>
+        🗑️ Delete Selected (<span id="selected-count">0</span>)
+      </button>
+
+      <div class="filter-controls">
+        <label>
+          <input type="checkbox" id="filter-merged" checked onchange="applyFilters()">
+          Show Merged
+        </label>
+        <label>
+          <input type="checkbox" id="filter-unmerged" checked onchange="applyFilters()">
+          Show Unmerged
+        </label>
+        <label>
+          <input type="checkbox" id="hide-protected" checked onchange="applyFilters()">
+          Hide Protected
+        </label>
+      </div>
+    </div>
+
+    <div id="delete-preview" class="delete-preview hidden"></div>
+
+    <div class="content" id="content">
+      <div class="loading">Scanning repositories...</div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = '';
+    let allData = [];
+    let selectedBranches = new Map(); // repoIndex -> Set of branch names
+
+    async function loadData() {
+      try {
+        const res = await fetch(`${API_URL}/api/branches`);
+        const data = await res.json();
+        allData = data.repositories;
+
+        updateStats();
+        renderRepositories();
+      } catch (error) {
+        console.error('Error loading data:', error);
+        document.getElementById('content').innerHTML =
+          '<div class="empty-state">Error loading repositories</div>';
+      }
+    }
+
+    function updateStats() {
+      let totalBranches = 0;
+      let mergedBranches = 0;
+      let unmergedBranches = 0;
+      let protectedBranches = 0;
+
+      allData.forEach(repo => {
+        totalBranches += repo.branches.length;
+        mergedBranches += repo.branches.filter(b => b.merged).length;
+        unmergedBranches += repo.branches.filter(b => !b.merged).length;
+        protectedBranches += repo.branches.filter(b => b.protected).length;
+      });
+
+      const cleanableBranches = mergedBranches - repo.branches.filter(b => b.merged && b.protected).length;
+
+      document.getElementById('status').textContent =
+        `Found ${allData.length} repositories with ${totalBranches} total branches`;
+
+      document.getElementById('stats').innerHTML = `
+        <div class="stat-card">
+          <div class="stat-label">Repositories</div>
+          <div class="stat-value">${allData.length}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Branches</div>
+          <div class="stat-value">${totalBranches}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Merged (Cleanable)</div>
+          <div class="stat-value" style="color: #10b981">${mergedBranches}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Unmerged</div>
+          <div class="stat-value" style="color: #f59e0b">${unmergedBranches}</div>
+        </div>
+      `;
+    }
+
+    function renderRepositories() {
+      const content = document.getElementById('content');
+
+      if (allData.length === 0) {
+        content.innerHTML = '<div class="empty-state">No git repositories found</div>';
+        return;
+      }
+
+      const html = allData.map((repo, repoIndex) => {
+        const filteredBranches = filterBranches(repo.branches);
+
+        if (filteredBranches.length === 0) return '';
+
+        const mergedCount = filteredBranches.filter(b => b.merged && !b.protected).length;
+
+        return `
+          <div class="repo-section">
+            <div class="repo-header" onclick="toggleRepo(${repoIndex})">
+              <div>
+                <div class="repo-name">${repo.repoName}</div>
+                <div class="repo-path">${repo.repoPath}</div>
+              </div>
+              <div class="repo-stats">
+                ${filteredBranches.length} branches •
+                <span style="color: #10b981">${mergedCount} cleanable</span> •
+                Current: <strong>${repo.currentBranch}</strong>
+              </div>
+            </div>
+
+            <div id="repo-${repoIndex}" class="repo-content">
+              ${mergedCount > 0 ? `
+                <div class="select-all-section">
+                  <label>
+                    <input type="checkbox" onchange="selectAllMerged(${repoIndex}, this.checked)">
+                    Select all ${mergedCount} merged branches
+                  </label>
+                </div>
+              ` : ''}
+
+              <table class="branch-table">
+                <thead>
+                  <tr>
+                    <th class="checkbox-cell"></th>
+                    <th>Branch</th>
+                    <th>Status</th>
+                    <th>Last Commit</th>
+                    <th>Author</th>
+                    <th>Ahead/Behind</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${filteredBranches.map(branch => `
+                    <tr>
+                      <td class="checkbox-cell">
+                        ${!branch.protected && !branch.current ? `
+                          <input type="checkbox"
+                                 class="branch-checkbox"
+                                 data-repo="${repoIndex}"
+                                 data-branch="${branch.name}"
+                                 onchange="updateSelection()">
+                        ` : ''}
+                      </td>
+                      <td>
+                        <span class="branch-name">${branch.name}</span>
+                      </td>
+                      <td>
+                        ${branch.current ? '<span class="badge badge-current">CURRENT</span>' : ''}
+                        ${branch.merged ? '<span class="badge badge-merged">MERGED</span>' : '<span class="badge badge-unmerged">UNMERGED</span>'}
+                        ${branch.protected ? '<span class="badge badge-protected">PROTECTED</span>' : ''}
+                      </td>
+                      <td>
+                        <div class="commit-info">
+                          <div>${branch.lastCommit.subject}</div>
+                          <div class="commit-date">${formatDate(branch.lastCommit.date)}</div>
+                        </div>
+                      </td>
+                      <td class="commit-info">${branch.lastCommit.author}</td>
+                      <td class="ahead-behind">
+                        ${branch.ahead > 0 ? `↑${branch.ahead}` : ''}
+                        ${branch.behind > 0 ? `↓${branch.behind}` : ''}
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      content.innerHTML = html || '<div class="empty-state">No branches match current filters</div>';
+    }
+
+    function filterBranches(branches) {
+      const showMerged = document.getElementById('filter-merged').checked;
+      const showUnmerged = document.getElementById('filter-unmerged').checked;
+      const hideProtected = document.getElementById('hide-protected').checked;
+
+      return branches.filter(branch => {
+        if (hideProtected && branch.protected) return false;
+        if (branch.merged && !showMerged) return false;
+        if (!branch.merged && !showUnmerged) return false;
+        return true;
+      });
+    }
+
+    function applyFilters() {
+      renderRepositories();
+      selectedBranches.clear();
+      updateSelection();
+    }
+
+    function toggleRepo(repoIndex) {
+      const content = document.getElementById(`repo-${repoIndex}`);
+      content.style.display = content.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function selectAllMerged(repoIndex, checked) {
+      const repo = allData[repoIndex];
+      const mergedBranches = repo.branches.filter(b => b.merged && !b.protected);
+
+      if (!selectedBranches.has(repoIndex)) {
+        selectedBranches.set(repoIndex, new Set());
+      }
+
+      const repoSet = selectedBranches.get(repoIndex);
+
+      mergedBranches.forEach(branch => {
+        const checkbox = document.querySelector(`input[data-repo="${repoIndex}"][data-branch="${branch.name}"]`);
+        if (checkbox) {
+          checkbox.checked = checked;
+          if (checked) {
+            repoSet.add(branch.name);
+          } else {
+            repoSet.delete(branch.name);
+          }
+        }
+      });
+
+      updateSelection();
+    }
+
+    function updateSelection() {
+      selectedBranches.clear();
+
+      document.querySelectorAll('.branch-checkbox:checked').forEach(checkbox => {
+        const repoIndex = parseInt(checkbox.dataset.repo);
+        const branchName = checkbox.dataset.branch;
+
+        if (!selectedBranches.has(repoIndex)) {
+          selectedBranches.set(repoIndex, new Set());
+        }
+
+        selectedBranches.get(repoIndex).add(branchName);
+      });
+
+      const totalSelected = Array.from(selectedBranches.values())
+        .reduce((sum, set) => sum + set.size, 0);
+
+      document.getElementById('selected-count').textContent = totalSelected;
+      document.getElementById('delete-btn').disabled = totalSelected === 0;
+
+      updateDeletePreview();
+    }
+
+    function updateDeletePreview() {
+      const preview = document.getElementById('delete-preview');
+      const totalSelected = Array.from(selectedBranches.values())
+        .reduce((sum, set) => sum + set.size, 0);
+
+      if (totalSelected === 0) {
+        preview.classList.add('hidden');
+        return;
+      }
+
+      const items = [];
+      selectedBranches.forEach((branches, repoIndex) => {
+        const repo = allData[repoIndex];
+        branches.forEach(branch => {
+          items.push(`<li>${repo.repoName}: ${branch}</li>`);
+        });
+      });
+
+      preview.innerHTML = `
+        <h3>⚠️ About to delete ${totalSelected} branch${totalSelected > 1 ? 'es' : ''}</h3>
+        <ul>${items.join('')}</ul>
+        <p><strong>This action cannot be undone.</strong></p>
+      `;
+      preview.classList.remove('hidden');
+    }
+
+    async function deleteSelected() {
+      const totalSelected = Array.from(selectedBranches.values())
+        .reduce((sum, set) => sum + set.size, 0);
+
+      if (totalSelected === 0) return;
+
+      const confirmed = confirm(
+        `Are you sure you want to delete ${totalSelected} branch${totalSelected > 1 ? 'es' : ''}?\n\n` +
+        `This action cannot be undone.`
+      );
+
+      if (!confirmed) return;
+
+      const deleteBtn = document.getElementById('delete-btn');
+      deleteBtn.disabled = true;
+      deleteBtn.textContent = 'Deleting...';
+
+      for (const [repoIndex, branches] of selectedBranches.entries()) {
+        try {
+          const res = await fetch(`${API_URL}/api/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              repoIndex,
+              branches: Array.from(branches),
+              force: false
+            })
+          });
+
+          const data = await res.json();
+          console.log('Delete results:', data);
+        } catch (error) {
+          console.error('Error deleting branches:', error);
+        }
+      }
+
+      selectedBranches.clear();
+      await refreshData();
+
+      deleteBtn.textContent = '🗑️ Delete Selected (0)';
+    }
+
+    async function refreshData() {
+      document.getElementById('content').innerHTML = '<div class="loading">Refreshing...</div>';
+
+      try {
+        await fetch(`${API_URL}/api/refresh`, { method: 'POST' });
+        await loadData();
+      } catch (error) {
+        console.error('Error refreshing:', error);
+      }
+    }
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 0) return 'Today';
+      if (diffDays === 1) return 'Yesterday';
+      if (diffDays < 7) return `${diffDays} days ago`;
+      if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+      if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+      return `${Math.floor(diffDays / 365)} years ago`;
+    }
+
+    // Initial load
+    loadData();
+  </script>
+</body>
+</html>
