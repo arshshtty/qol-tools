@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Network Device Monitor</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #3b82f6;
+    }
+
+    .actions {
+      background: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+
+    .btn-secondary {
+      background: #6b7280;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #4b5563;
+    }
+
+    .filter-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex: 1;
+    }
+
+    .filter-controls label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 14px;
+    }
+
+    .content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      color: #666;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+    }
+
+    .tab.active {
+      color: #3b82f6;
+      border-bottom-color: #3b82f6;
+    }
+
+    .device-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .device-card {
+      background: #f9fafb;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 15px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .device-card:hover {
+      border-color: #3b82f6;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .device-card.online {
+      border-left: 4px solid #10b981;
+    }
+
+    .device-card.offline {
+      opacity: 0.6;
+      border-left: 4px solid #ef4444;
+    }
+
+    .device-card.new {
+      border-color: #f59e0b;
+      background: #fffbeb;
+    }
+
+    .device-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 10px;
+    }
+
+    .device-name {
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .device-ip {
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .device-info {
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
+    }
+
+    .device-info div {
+      margin: 4px 0;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-online {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .badge-offline {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .badge-new {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .vendor-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #3b82f6;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .alerts-list {
+      list-style: none;
+    }
+
+    .alert-item {
+      padding: 12px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .alert-item:last-child {
+      border-bottom: none;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      max-width: 500px;
+      width: 90%;
+    }
+
+    .modal-header {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .scan-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #10b981;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📡 Network Device Monitor</h1>
+      <p id="status">Loading...</p>
+    </header>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="refreshScan()">
+        🔄 Scan Network
+      </button>
+      <button class="btn btn-secondary" onclick="clearAlerts()">
+        🔕 Clear Alerts
+      </button>
+
+      <div class="filter-controls">
+        <label>
+          <input type="radio" name="filter" value="all" checked onchange="applyFilter()">
+          All Devices
+        </label>
+        <label>
+          <input type="radio" name="filter" value="online" onchange="applyFilter()">
+          Online Only
+        </label>
+        <label>
+          <input type="radio" name="filter" value="offline" onchange="applyFilter()">
+          Offline Only
+        </label>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="devices">Devices</button>
+      <button class="tab" data-tab="alerts">Alerts</button>
+    </div>
+
+    <div class="content">
+      <div id="devices-tab" class="tab-content">
+        <div class="device-grid" id="device-grid">
+          <div class="loading">Scanning network...</div>
+        </div>
+      </div>
+
+      <div id="alerts-tab" class="tab-content" style="display: none;">
+        <ul class="alerts-list" id="alerts-list">
+          <li class="loading">Loading alerts...</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Device Details Modal -->
+  <div id="device-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">Device Details</div>
+      <div id="modal-body"></div>
+      <div class="form-group">
+        <label>Custom Name</label>
+        <input type="text" id="device-name-input" placeholder="Enter device name">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveDeviceName()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = '';
+    let allDevices = [];
+    let currentFilter = 'all';
+    let currentTab = 'devices';
+    let selectedDevice = null;
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        switchTab(tab.dataset.tab);
+      });
+    });
+
+    function switchTab(tabName) {
+      currentTab = tabName;
+
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.style.display = 'none';
+      });
+      document.getElementById(`${tabName}-tab`).style.display = 'block';
+
+      if (tabName === 'devices') loadDevices();
+      else if (tabName === 'alerts') loadAlerts();
+    }
+
+    async function loadStats() {
+      try {
+        const res = await fetch(`${API_URL}/api/stats`);
+        const data = await res.json();
+
+        document.getElementById('status').innerHTML =
+          `Last scan: ${data.lastScan ? formatDate(data.lastScan) : 'Never'} ${data.scanning ? '<span class="scan-indicator"></span>' : ''}`;
+
+        const statsHTML = `
+          <div class="stat-card">
+            <div class="stat-label">Total Devices</div>
+            <div class="stat-value">${data.total}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Online</div>
+            <div class="stat-value" style="color: #10b981">${data.online}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Offline</div>
+            <div class="stat-value" style="color: #ef4444">${data.offline}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">New Devices</div>
+            <div class="stat-value" style="color: #f59e0b">${data.new}</div>
+          </div>
+        `;
+
+        document.getElementById('stats').innerHTML = statsHTML;
+      } catch (error) {
+        console.error('Error loading stats:', error);
+      }
+    }
+
+    async function loadDevices() {
+      try {
+        const res = await fetch(`${API_URL}/api/devices`);
+        const data = await res.json();
+        allDevices = data.devices;
+
+        renderDevices();
+      } catch (error) {
+        console.error('Error loading devices:', error);
+      }
+    }
+
+    function renderDevices() {
+      const grid = document.getElementById('device-grid');
+      const filteredDevices = filterDevices(allDevices);
+
+      if (filteredDevices.length === 0) {
+        grid.innerHTML = '<div class="empty-state">No devices found</div>';
+        return;
+      }
+
+      grid.innerHTML = filteredDevices.map(device => {
+        const isOnline = isDeviceOnline(device);
+        const displayName = device.customName || device.hostname || 'Unknown Device';
+        const vendorInitial = device.vendor ? device.vendor[0].toUpperCase() : '?';
+
+        return `
+          <div class="device-card ${isOnline ? 'online' : 'offline'} ${device.isNew ? 'new' : ''}"
+               onclick="showDeviceDetails('${device.mac}')">
+            <div class="device-header">
+              <div>
+                <div class="device-name">${displayName}</div>
+                <div class="device-ip">${device.ip}</div>
+              </div>
+              <div class="vendor-icon" style="background: ${getVendorColor(device.vendor)}">
+                ${vendorInitial}
+              </div>
+            </div>
+
+            <div style="margin-top: 10px;">
+              <span class="badge badge-${isOnline ? 'online' : 'offline'}">
+                ${isOnline ? 'ONLINE' : 'OFFLINE'}
+              </span>
+              ${device.isNew ? '<span class="badge badge-new">NEW</span>' : ''}
+            </div>
+
+            <div class="device-info">
+              <div><strong>MAC:</strong> ${device.mac}</div>
+              <div><strong>Vendor:</strong> ${device.vendor || 'Unknown'}</div>
+              <div><strong>Last seen:</strong> ${formatDate(device.lastSeen)}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterDevices(devices) {
+      if (currentFilter === 'online') {
+        return devices.filter(d => isDeviceOnline(d));
+      } else if (currentFilter === 'offline') {
+        return devices.filter(d => !isDeviceOnline(d));
+      }
+      return devices;
+    }
+
+    function applyFilter() {
+      currentFilter = document.querySelector('input[name="filter"]:checked').value;
+      renderDevices();
+    }
+
+    function isDeviceOnline(device) {
+      const lastSeen = new Date(device.lastSeen).getTime();
+      const cutoff = Date.now() - (5 * 60 * 1000); // 5 minutes
+      return lastSeen > cutoff;
+    }
+
+    function showDeviceDetails(mac) {
+      const device = allDevices.find(d => d.mac === mac);
+      if (!device) return;
+
+      selectedDevice = device;
+
+      const modalBody = document.getElementById('modal-body');
+      const isOnline = isDeviceOnline(device);
+
+      modalBody.innerHTML = `
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
+            ${device.customName || device.hostname || 'Unknown Device'}
+          </div>
+          <div><strong>IP Address:</strong> ${device.ip}</div>
+          <div><strong>MAC Address:</strong> ${device.mac}</div>
+          <div><strong>Vendor:</strong> ${device.vendor || 'Unknown'}</div>
+          <div><strong>Status:</strong> <span class="badge badge-${isOnline ? 'online' : 'offline'}">${isOnline ? 'ONLINE' : 'OFFLINE'}</span></div>
+          <div><strong>First seen:</strong> ${formatDate(device.firstSeen)}</div>
+          <div><strong>Last seen:</strong> ${formatDate(device.lastSeen)}</div>
+        </div>
+      `;
+
+      document.getElementById('device-name-input').value = device.customName || '';
+      document.getElementById('device-modal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('device-modal').classList.remove('show');
+      selectedDevice = null;
+    }
+
+    async function saveDeviceName() {
+      if (!selectedDevice) return;
+
+      const name = document.getElementById('device-name-input').value.trim();
+
+      try {
+        const res = await fetch(`${API_URL}/api/devices/${selectedDevice.mac}/name`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+
+        if (res.ok) {
+          closeModal();
+          await loadDevices();
+          loadStats();
+        } else {
+          alert('Error saving device name');
+        }
+      } catch (error) {
+        console.error('Error saving device name:', error);
+        alert('Error saving device name');
+      }
+    }
+
+    async function loadAlerts() {
+      try {
+        const res = await fetch(`${API_URL}/api/alerts`);
+        const data = await res.json();
+
+        const list = document.getElementById('alerts-list');
+
+        if (data.alerts.length === 0) {
+          list.innerHTML = '<li class="empty-state">No recent alerts</li>';
+          return;
+        }
+
+        list.innerHTML = data.alerts.map(alert => `
+          <li class="alert-item">
+            <div>
+              <strong>New device detected</strong><br>
+              ${alert.device.ip} (${alert.device.mac})<br>
+              <small>${formatDate(alert.timestamp)}</small>
+            </div>
+            <span class="badge badge-new">NEW</span>
+          </li>
+        `).join('');
+      } catch (error) {
+        console.error('Error loading alerts:', error);
+      }
+    }
+
+    async function refreshScan() {
+      try {
+        const res = await fetch(`${API_URL}/api/scan`, { method: 'POST' });
+        if (res.ok) {
+          setTimeout(() => {
+            loadDevices();
+            loadStats();
+          }, 2000);
+        }
+      } catch (error) {
+        console.error('Error triggering scan:', error);
+      }
+    }
+
+    async function clearAlerts() {
+      try {
+        const res = await fetch(`${API_URL}/api/alerts/clear`, { method: 'POST' });
+        if (res.ok) {
+          loadStats();
+          loadAlerts();
+        }
+      } catch (error) {
+        console.error('Error clearing alerts:', error);
+      }
+    }
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / (1000 * 60));
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins} min ago`;
+      if (diffHours < 24) return `${diffHours} hours ago`;
+      if (diffDays < 7) return `${diffDays} days ago`;
+      return date.toLocaleDateString();
+    }
+
+    function getVendorColor(vendor) {
+      const colors = {
+        'Apple': '#555555',
+        'Samsung': '#1428a0',
+        'Google': '#4285f4',
+        'Amazon': '#ff9900',
+        'Roku': '#6f1ab1',
+        'TP-Link': '#4caf50',
+        'Raspberry Pi': '#c51a4a',
+        'Intel': '#0071c5',
+        'Microsoft': '#00a4ef',
+        'Sony': '#000000'
+      };
+      return colors[vendor] || '#3b82f6';
+    }
+
+    // Initial load
+    loadStats();
+    loadDevices();
+
+    // Auto refresh every 30 seconds
+    setInterval(() => {
+      loadStats();
+      if (currentTab === 'devices') loadDevices();
+      else if (currentTab === 'alerts') loadAlerts();
+    }, 30000);
+
+    // Close modal on background click
+    document.getElementById('device-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'device-modal') {
+        closeModal();
+      }
+    });
+  </script>
+</body>
+</html>
