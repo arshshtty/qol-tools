@@ -1,0 +1,17 @@
+{
+  "name": "@qol-tools/network-monitor",
+  "version": "1.0.0",
+  "description": "Monitor devices on your local network",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node src/index.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "node-fetch": "^3.3.0"
+  },
+  "devDependencies": {}
+}

@@ -67,18 +67,30 @@ This document tracks tool ideas that have excellent existing alternatives. Befor
 ---
 
 ## Network Device Monitor
-**Why not build:** Bandwidth tracking is complex, good tools exist.
+**Status:** ✅ **BUILT** - See `tools/network-monitor/`
 
-**Alternatives:**
-- **Fing** - Comprehensive network scanner and monitor
+**Why we built it:**
+- Fing's best features are behind a paywall
+- Privacy-focused: 100% local, no data sent to external servers
+- Open-source alternative to commercial tools
+- Simple device discovery without the complexity of Wireshark
+- Cross-platform support (Linux, macOS, Windows)
+
+**Alternatives (if you need more features):**
+- **Fing** - Comprehensive network scanner (many features paid)
 - **Angry IP Scanner** - Fast network scanner
-- **Wireshark** - Deep packet inspection
-- **nethogs** - Per-process bandwidth monitor (Linux)
-- **Little Snitch** - Network monitor (macOS)
+- **Wireshark** - Deep packet inspection (complex)
+- **nethogs** - Per-process bandwidth monitor (Linux only)
+- **Little Snitch** - Network monitor (macOS only, expensive)
 
-**What would make this worth building:**
-- Home lab specific features existing tools don't cover
-- Privacy-focused alternative with local-only data
+**Our implementation focuses on:**
+- Device discovery and tracking
+- New device alerts
+- Custom device naming
+- Clean web interface
+- Zero cost, full features
+
+**Note:** We intentionally skipped bandwidth tracking as it requires deep packet inspection and elevated permissions. Use nethogs, iftop, or router-based solutions for bandwidth monitoring.
 
 ---
 

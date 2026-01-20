@@ -1,0 +1,10 @@
+{
+  "scanInterval": 30000,
+  "scanTimeout": 5000,
+  "port": 3004,
+  "enableAlerts": true,
+  "alertSound": false,
+  "knownDevices": {},
+  "autoScan": true,
+  "pingCount": 1
+}
