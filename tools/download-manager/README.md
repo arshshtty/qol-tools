@@ -41,8 +41,8 @@ Edit `config.json` to customize:
 
 ```bash
 cd tools/download-manager
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 Then open the web UI at http://localhost:3001

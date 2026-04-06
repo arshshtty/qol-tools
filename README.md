@@ -72,14 +72,8 @@ Monitor all devices on your local network with alerts for new devices.
 ### Install Dependencies
 
 ```bash
-# Install root dependencies
-npm install
-
-# Install all tool dependencies
-cd tools/download-manager && npm install
-cd ../port-resolver && npm install
-cd ../git-branch-cleaner && npm install
-cd ../network-monitor && npm install
+# Install dependencies for all workspace tools
+pnpm install
 ```
 
 ### Run a Tool
@@ -87,28 +81,28 @@ cd ../network-monitor && npm install
 **Download Manager:**
 ```bash
 cd tools/download-manager
-npm run dev
+pnpm run dev
 # Open http://localhost:3001
 ```
 
 **Port Resolver:**
 ```bash
 cd tools/port-resolver
-npm run dev
+pnpm run dev
 # Open http://localhost:3002
 ```
 
 **Git Branch Cleaner:**
 ```bash
 cd tools/git-branch-cleaner
-npm run dev
+pnpm run dev
 # Open http://localhost:3003
 ```
 
 **Network Device Monitor:**
 ```bash
 cd tools/network-monitor
-npm run dev
+pnpm run dev
 # Open http://localhost:3004
 # Note: May require sudo on Linux/Mac for ARP access
 ```
@@ -119,7 +113,7 @@ Open separate terminals for each tool, or use a process manager like [PM2](https
 
 ```bash
 # Install PM2 globally
-npm install -g pm2
+pnpm add -g pm2
 
 # Start all tools
 pm2 start tools/download-manager/src/index.js --name download-manager

@@ -42,8 +42,8 @@ Edit `config.json` to customize:
 
 ```bash
 cd tools/git-branch-cleaner
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 Then open the web UI at http://localhost:3003

@@ -37,8 +37,8 @@ Edit `config.json` to customize:
 
 ```bash
 cd tools/port-resolver
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 Then open the web UI at http://localhost:3002
@@ -52,7 +52,7 @@ Save your preferred port allocations:
   "3000": {
     "name": "React Dev Server",
     "description": "Main frontend app",
-    "command": "npm run dev"
+    "command": "pnpm run dev"
   },
   "8080": {
     "name": "Backend API",

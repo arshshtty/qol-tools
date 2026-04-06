@@ -41,15 +41,15 @@ Edit `config.json` to customize:
 
 ```bash
 cd tools/network-monitor
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 Then open the web UI at http://localhost:3004
 
 **Note:** On Linux/Mac, you may need to run with sudo for ARP scanning:
 ```bash
-sudo npm run dev
+sudo pnpm run dev
 ```
 
 ## Device Management

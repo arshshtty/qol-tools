@@ -1,48 +1,50 @@
 #!/bin/bash
 
+set -euo pipefail
+
 echo "🛠️  QOL Tools Setup"
 echo "=================="
 echo ""
 
 # Check Node.js
-if ! command -v node &> /dev/null; then
-    echo "❌ Node.js is not installed. Please install Node.js first."
-    exit 1
+if ! command -v node >/dev/null 2>&1; then
+  echo "❌ Node.js is not installed. Please install Node.js first."
+  exit 1
 fi
 
 echo "✓ Node.js version: $(node --version)"
-echo "✓ npm version: $(npm --version)"
+
+# Check Corepack
+if ! command -v corepack >/dev/null 2>&1; then
+  echo "❌ Corepack is not available."
+  echo "   Please install Node.js 16.10+ (Corepack included) or reinstall your Node distribution with Corepack."
+  exit 1
+fi
+
+echo "✓ Corepack version: $(corepack --version)"
 echo ""
 
-# Install root dependencies
-echo "📦 Installing root dependencies..."
-npm install
+echo "🔧 Enabling Corepack..."
+corepack enable
 
-# Install Download Manager
-echo ""
-echo "📦 Installing Download Manager..."
-cd tools/download-manager
-npm install
-cd ../..
+echo "📦 Installing pnpm via Corepack..."
+corepack prepare pnpm@latest --activate
 
-# Install Port Resolver
-echo ""
-echo "📦 Installing Port Resolver..."
-cd tools/port-resolver
-npm install
-cd ../..
+echo "📦 Installing workspace dependencies (all tools)..."
+pnpm install
 
 echo ""
 echo "✅ Setup complete!"
 echo ""
 echo "🚀 Quick Start:"
 echo ""
-echo "  Download Manager:"
-echo "    cd tools/download-manager && npm run dev"
-echo "    Open http://localhost:3001"
+echo "  Run all tools in parallel:"
+echo "    pnpm -r run dev"
 echo ""
-echo "  Port Resolver:"
-echo "    cd tools/port-resolver && npm run dev"
-echo "    Open http://localhost:3002"
+echo "  Run a specific tool:"
+echo "    pnpm --filter download-manager run dev  # http://localhost:3001"
+echo "    pnpm --filter port-resolver run dev     # http://localhost:3002"
+echo "    pnpm --filter git-branch-cleaner run dev # http://localhost:3003"
+echo "    pnpm --filter network-monitor run dev   # http://localhost:3004"
 echo ""
 echo "📖 See README.md for more details"
