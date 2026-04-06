@@ -84,54 +84,39 @@ cd ../network-monitor && npm install
 
 ### Run a Tool
 
+From the repo root, use the helper scripts:
+
 **Download Manager:**
 ```bash
-cd tools/download-manager
-npm run dev
+npm run dev:download-manager
 # Open http://localhost:3001
 ```
 
 **Port Resolver:**
 ```bash
-cd tools/port-resolver
-npm run dev
+npm run dev:port-resolver
 # Open http://localhost:3002
 ```
 
 **Git Branch Cleaner:**
 ```bash
-cd tools/git-branch-cleaner
-npm run dev
+npm run dev:git-branch-cleaner
 # Open http://localhost:3003
 ```
 
 **Network Device Monitor:**
 ```bash
-cd tools/network-monitor
-npm run dev
+npm run dev:network-monitor
 # Open http://localhost:3004
 # Note: May require sudo on Linux/Mac for ARP access
 ```
 
 ### Run Multiple Tools
 
-Open separate terminals for each tool, or use a process manager like [PM2](https://pm2.keymetrics.io/):
+Use the aggregate root script to start all tools in parallel:
 
 ```bash
-# Install PM2 globally
-npm install -g pm2
-
-# Start all tools
-pm2 start tools/download-manager/src/index.js --name download-manager
-pm2 start tools/port-resolver/src/index.js --name port-resolver
-pm2 start tools/git-branch-cleaner/src/index.js --name git-branch-cleaner
-pm2 start tools/network-monitor/src/index.js --name network-monitor
-
-# View logs
-pm2 logs
-
-# Stop all
-pm2 stop all
+npm run dev:all
 ```
 
 ## 📋 Project Structure

@@ -4,16 +4,24 @@
   "description": "Quality of life tools for day-to-day development",
   "private": true,
   "workspaces": [
-    "tools/*",
-    "web-ui"
+    "tools/*"
   ],
   "scripts": {
     "dev:download-manager": "cd tools/download-manager && npm run dev",
     "dev:port-resolver": "cd tools/port-resolver && npm run dev",
-    "dev:ui": "cd web-ui && npm run dev",
+    "dev:git-branch-cleaner": "cd tools/git-branch-cleaner && npm run dev",
+    "dev:network-monitor": "cd tools/network-monitor && npm run dev",
+    "dev:all": "concurrently \"npm run dev:download-manager\" \"npm run dev:port-resolver\" \"npm run dev:git-branch-cleaner\" \"npm run dev:network-monitor\"",
     "install:all": "npm install && npm install --workspaces"
   },
-  "keywords": ["productivity", "developer-tools", "qol"],
+  "keywords": [
+    "productivity",
+    "developer-tools",
+    "qol"
+  ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
 }
