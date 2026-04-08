@@ -13,6 +13,9 @@
     "dev:ui": "cd web-ui && npm run dev",
     "install:all": "npm install && npm install --workspaces"
   },
+  "dependencies": {
+    "zod": "^3.24.1"
+  },
   "keywords": ["productivity", "developer-tools", "qol"],
   "author": "",
   "license": "MIT"

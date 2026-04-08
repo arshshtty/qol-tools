@@ -71,3 +71,14 @@ The tool will alert you if something else is using these ports.
 - `POST /api/kill/:pid` - Kill a process by PID
 - `GET /api/preferences` - Get port preferences
 - `POST /api/preferences` - Save port preferences
+
+## Config Validation
+
+- Configuration and port preferences are validated at load time with a schema (`zod`).
+- If `config.json`, `preferences.json`, or `preferences.default.json` is invalid, the tool prints a human-readable error with file path + failing field path.
+- On validation failure, the process exits with a non-zero status code.
+- Validation includes:
+  - all ports/range values are constrained to `1`-`65535`
+  - `refreshInterval` must be greater than `0`
+  - `scanRanges` must contain valid range objects with `end >= start`
+  - preference keys must be numeric ports, and each preference object is validated field-by-field

@@ -78,3 +78,14 @@ Then open the web UI at http://localhost:3003
 - Add custom `protectedBranches` for your workflow
 - Use the filter to quickly find old branches
 - Check the last commit date to identify stale branches
+
+## Config Validation
+
+- Configuration is validated at startup with a schema (`zod`).
+- If `config.json` is invalid, the tool prints a human-readable error that includes the config file path and failing field path.
+- On validation failure, the process exits with a non-zero status code.
+- Validation includes:
+  - `port` must be between `1` and `65535`
+  - `refreshInterval` must be greater than `0`
+  - `scanPath` must be a non-empty path string
+  - `baseBranches` and `protectedBranches` must be arrays of non-empty strings

@@ -54,3 +54,14 @@ Then open the web UI at http://localhost:3001
 - `GET /api/duplicates` - Find duplicate files
 - `DELETE /api/files/:path` - Delete a file
 - `GET /api/history` - Get sorting history
+
+## Config Validation
+
+- Configuration is validated at startup with a schema (`zod`) before the app starts.
+- If `config.json` is invalid, the tool prints a human-readable error that includes the config file path and failing field path.
+- On validation failure, the process exits with a non-zero status code.
+- Validation includes:
+  - `port` must be between `1` and `65535`
+  - `watchPath` and `sortedPath` must be non-empty strings
+  - `categories` must be an object of arrays, and every extension entry must be a non-empty string beginning with `.`
+  - `ignoredExtensions` entries must be non-empty strings beginning with `.`

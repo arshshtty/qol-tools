@@ -1,9 +1,44 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { z } from 'zod';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const extensionSchema = z.string().trim().min(2, 'extension cannot be empty').startsWith('.', 'extension must start with "."');
+
+const configSchema = z.object({
+  watchPath: z.string().trim().min(1, 'watchPath must be a non-empty path'),
+  sortedPath: z.string().trim().min(1, 'sortedPath must be a non-empty path'),
+  categories: z.record(z.string().trim().min(1, 'category names must be non-empty'), z.array(extensionSchema).min(1, 'each category must include at least one extension')),
+  ignoredExtensions: z.array(extensionSchema),
+  port: z.number().int().min(1, 'port must be >= 1').max(65535, 'port must be <= 65535'),
+  duplicateCheckEnabled: z.boolean()
+});
+
+function readAndValidateConfig(filePath) {
+  let json;
+
+  try {
+    json = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch (error) {
+    console.error(`❌ Invalid JSON in ${filePath}: ${error.message}`);
+    process.exit(1);
+  }
+
+  const result = configSchema.safeParse(json);
+  if (!result.success) {
+    console.error(`❌ Invalid config file: ${filePath}`);
+    result.error.issues.forEach((issue) => {
+      const fieldPath = issue.path.length > 0 ? issue.path.join('.') : '(root)';
+      console.error(`  • ${filePath} -> ${fieldPath}: ${issue.message}`);
+    });
+    process.exit(1);
+  }
+
+  return result.data;
+}
 
 export function loadConfig() {
   const configPath = path.join(__dirname, '..', 'config.json');
@@ -12,9 +47,9 @@ export function loadConfig() {
   let config;
 
   if (fs.existsSync(configPath)) {
-    config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    config = readAndValidateConfig(configPath);
   } else {
-    config = JSON.parse(fs.readFileSync(defaultConfigPath, 'utf8'));
+    config = readAndValidateConfig(defaultConfigPath);
     console.log('⚙️  Using default configuration');
   }
 

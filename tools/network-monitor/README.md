@@ -120,3 +120,13 @@ sudo npm run dev
 - [ ] Historical graphs
 - [ ] Export device list
 - [ ] Integration with router APIs
+
+## Config Validation
+
+- Configuration is validated at startup with a schema (`zod`).
+- If `config.json` is invalid, the tool prints a human-readable error that includes the config file path and failing field path.
+- On validation failure, the process exits with a non-zero status code.
+- Validation includes:
+  - `port` must be between `1` and `65535`
+  - `scanInterval`, `scanTimeout`, and `pingCount` must be greater than `0`
+  - required booleans and object fields must have valid types
