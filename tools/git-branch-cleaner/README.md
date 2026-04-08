@@ -78,3 +78,23 @@ Then open the web UI at http://localhost:3003
 - Add custom `protectedBranches` for your workflow
 - Use the filter to quickly find old branches
 - Check the last commit date to identify stale branches
+
+## API Auth Toggle
+
+Authentication is optional and controlled by an environment variable.
+
+```bash
+# Auth OFF (default)
+npm run dev
+
+# Auth ON
+QOL_TOOLS_API_TOKEN=your-secret-token npm run dev
+```
+
+When auth is enabled, pass a token with either header:
+
+```bash
+curl -H "x-api-token: your-secret-token" http://localhost:3003/api/repos
+curl -H "Authorization: Bearer your-secret-token" http://localhost:3003/api/repos
+```
+

@@ -1,15 +1,23 @@
 import express from 'express';
-import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import { getHistory } from './history.js';
 import { getStats } from './watcher.js';
 import { findDuplicates } from './duplicateDetector.js';
+import {
+  createCorsMiddleware,
+  createApiTokenMiddleware,
+  createRateLimitMiddleware,
+  sanitizePathSegment,
+  sendError
+} from '../../shared/security.js';
 
 export function startAPI(config) {
   const app = express();
+  const destructiveRateLimit = createRateLimitMiddleware();
 
-  app.use(cors());
+  app.use(createCorsMiddleware(config.port));
+  app.use(createApiTokenMiddleware());
   app.use(express.json());
   app.use(express.static(path.join(path.dirname(import.meta.url.replace('file://', '')), '..', 'public')));
 
@@ -26,7 +34,15 @@ export function startAPI(config) {
 
   // List all sorted files
   app.get('/api/files', (req, res) => {
-    const category = req.query.category;
+    const requestedCategory = req.query.category;
+    const category = requestedCategory && requestedCategory !== 'all'
+      ? sanitizePathSegment(requestedCategory)
+      : null;
+
+    if (requestedCategory && requestedCategory !== 'all' && !category) {
+      return sendError(res, 400, 'invalid_category', 'Invalid category');
+    }
+
     const files = [];
 
     function scanDir(dir, categoryName) {
@@ -48,7 +64,7 @@ export function startAPI(config) {
       }
     }
 
-    if (category && category !== 'all') {
+    if (category) {
       const categoryPath = path.join(config.sortedPath, category);
       if (fs.existsSync(categoryPath)) {
         scanDir(categoryPath, category);
@@ -78,13 +94,19 @@ export function startAPI(config) {
       const duplicates = await findDuplicates(config.sortedPath);
       res.json({ duplicates });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      sendError(res, 500, 'duplicate_scan_failed', error.message);
     }
   });
 
   // Delete a file
-  app.delete('/api/files/:category/:filename', (req, res) => {
-    const { category, filename } = req.params;
+  app.delete('/api/files/:category/:filename', destructiveRateLimit, (req, res) => {
+    const category = sanitizePathSegment(req.params.category);
+    const filename = sanitizePathSegment(req.params.filename);
+
+    if (!category || !filename) {
+      return sendError(res, 400, 'invalid_path_params', 'Invalid category or filename');
+    }
+
     const filePath = path.join(config.sortedPath, category, filename);
 
     try {
@@ -92,10 +114,10 @@ export function startAPI(config) {
         fs.unlinkSync(filePath);
         res.json({ success: true, message: 'File deleted' });
       } else {
-        res.status(404).json({ error: 'File not found' });
+        sendError(res, 404, 'file_not_found', 'File not found');
       }
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      sendError(res, 500, 'delete_failed', error.message);
     }
   });
 
@@ -139,6 +161,16 @@ export function startAPI(config) {
         </html>
       `);
     }
+  });
+
+
+  app.use((err, req, res, next) => {
+    if (err) {
+      sendError(res, 500, 'internal_error', err.message);
+      return;
+    }
+
+    next();
   });
 
   app.listen(config.port, () => {

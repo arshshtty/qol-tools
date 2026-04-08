@@ -1,9 +1,14 @@
 import express from 'express';
-import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { scanRepositories, getBranches, deleteBranches, getRepoStatus } from './git.js';
+import {
+  createCorsMiddleware,
+  createApiTokenMiddleware,
+  createRateLimitMiddleware,
+  sendError
+} from '../../shared/security.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,8 +18,10 @@ let branchCache = new Map();
 
 export function startAPI(config) {
   const app = express();
+  const destructiveRateLimit = createRateLimitMiddleware();
 
-  app.use(cors());
+  app.use(createCorsMiddleware(config.port));
+  app.use(createApiTokenMiddleware());
   app.use(express.json());
   app.use(express.static(path.join(__dirname, '..', 'public')));
 
@@ -31,7 +38,7 @@ export function startAPI(config) {
         }))
       });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      sendError(res, 500, 'repo_scan_failed', error.message);
     }
   });
 
@@ -49,18 +56,18 @@ export function startAPI(config) {
 
       res.json({ repositories: allBranches });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      sendError(res, 500, 'branch_scan_failed', error.message);
     }
   });
 
   // Get branches for a specific repository
   app.get('/api/branches/:repoIndex', async (req, res) => {
     try {
-      const repoIndex = parseInt(req.params.repoIndex);
+      const repoIndex = Number.parseInt(req.params.repoIndex, 10);
       const repos = cachedRepos.length > 0 ? cachedRepos : await scanRepositories(config.scanPath);
 
-      if (repoIndex < 0 || repoIndex >= repos.length) {
-        return res.status(404).json({ error: 'Repository not found' });
+      if (!Number.isInteger(repoIndex) || repoIndex < 0 || repoIndex >= repos.length) {
+        return sendError(res, 404, 'repository_not_found', 'Repository not found');
       }
 
       const repo = repos[repoIndex];
@@ -69,7 +76,7 @@ export function startAPI(config) {
 
       res.json(branchData);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      sendError(res, 500, 'branch_scan_failed', error.message);
     }
   });
 
@@ -93,33 +100,37 @@ export function startAPI(config) {
 
       res.json({ repositories: mergedBranches });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      sendError(res, 500, 'merged_branch_scan_failed', error.message);
     }
   });
 
   // Delete branches
-  app.post('/api/delete', async (req, res) => {
+  app.post('/api/delete', destructiveRateLimit, async (req, res) => {
     try {
       const { repoIndex, branches, force = false } = req.body;
+      const repoIndexInt = Number.isInteger(repoIndex) ? repoIndex : Number.parseInt(repoIndex, 10);
 
-      if (repoIndex === undefined || !branches || !Array.isArray(branches)) {
-        return res.status(400).json({ error: 'Invalid request body' });
+      if (!Number.isInteger(repoIndexInt) || repoIndexInt < 0 || !branches || !Array.isArray(branches)) {
+        return sendError(res, 400, 'invalid_request_body', 'repoIndex and branches[] are required');
       }
 
       const repos = cachedRepos.length > 0 ? cachedRepos : await scanRepositories(config.scanPath);
 
-      if (repoIndex < 0 || repoIndex >= repos.length) {
-        return res.status(404).json({ error: 'Repository not found' });
+      if (repoIndexInt >= repos.length) {
+        return sendError(res, 404, 'repository_not_found', 'Repository not found');
       }
 
-      const repo = repos[repoIndex];
+      const repo = repos[repoIndexInt];
 
       // Check for protected branches
       const protectedAttempt = branches.filter(b => config.protectedBranches.includes(b));
       if (protectedAttempt.length > 0) {
-        return res.status(400).json({
-          error: `Cannot delete protected branches: ${protectedAttempt.join(', ')}`
-        });
+        return sendError(
+          res,
+          400,
+          'protected_branch_delete_denied',
+          `Cannot delete protected branches: ${protectedAttempt.join(', ')}`
+        );
       }
 
       const results = await deleteBranches(repo, branches, force);
@@ -130,18 +141,18 @@ export function startAPI(config) {
 
       res.json({ results });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      sendError(res, 500, 'branch_delete_failed', error.message);
     }
   });
 
   // Get repository status
   app.get('/api/status/:repoIndex', async (req, res) => {
     try {
-      const repoIndex = parseInt(req.params.repoIndex);
+      const repoIndex = Number.parseInt(req.params.repoIndex, 10);
       const repos = cachedRepos.length > 0 ? cachedRepos : await scanRepositories(config.scanPath);
 
-      if (repoIndex < 0 || repoIndex >= repos.length) {
-        return res.status(404).json({ error: 'Repository not found' });
+      if (!Number.isInteger(repoIndex) || repoIndex < 0 || repoIndex >= repos.length) {
+        return sendError(res, 404, 'repository_not_found', 'Repository not found');
       }
 
       const repo = repos[repoIndex];
@@ -149,7 +160,7 @@ export function startAPI(config) {
 
       res.json(status);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      sendError(res, 500, 'repo_status_failed', error.message);
     }
   });
 
@@ -164,7 +175,7 @@ export function startAPI(config) {
 
       res.json({ success: true, message: 'Cache refreshed', repoCount: repos.length });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      sendError(res, 500, 'refresh_failed', error.message);
     }
   });
 
@@ -207,6 +218,16 @@ export function startAPI(config) {
         </html>
       `);
     }
+  });
+
+
+  app.use((err, req, res, next) => {
+    if (err) {
+      sendError(res, 500, 'internal_error', err.message);
+      return;
+    }
+
+    next();
   });
 
   app.listen(config.port, () => {

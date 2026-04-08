@@ -71,3 +71,23 @@ The tool will alert you if something else is using these ports.
 - `POST /api/kill/:pid` - Kill a process by PID
 - `GET /api/preferences` - Get port preferences
 - `POST /api/preferences` - Save port preferences
+
+## API Auth Toggle
+
+Authentication is optional and controlled by an environment variable.
+
+```bash
+# Auth OFF (default)
+npm run dev
+
+# Auth ON
+QOL_TOOLS_API_TOKEN=your-secret-token npm run dev
+```
+
+When auth is enabled, pass a token with either header:
+
+```bash
+curl -H "x-api-token: your-secret-token" http://localhost:3002/api/ports
+curl -H "Authorization: Bearer your-secret-token" http://localhost:3002/api/ports
+```
+

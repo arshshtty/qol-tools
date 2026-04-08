@@ -54,3 +54,23 @@ Then open the web UI at http://localhost:3001
 - `GET /api/duplicates` - Find duplicate files
 - `DELETE /api/files/:path` - Delete a file
 - `GET /api/history` - Get sorting history
+
+## API Auth Toggle
+
+Authentication is optional and controlled by an environment variable.
+
+```bash
+# Auth OFF (default)
+npm run dev
+
+# Auth ON
+QOL_TOOLS_API_TOKEN=your-secret-token npm run dev
+```
+
+When auth is enabled, pass a token with either header:
+
+```bash
+curl -H "x-api-token: your-secret-token" http://localhost:3001/api/status
+curl -H "Authorization: Bearer your-secret-token" http://localhost:3001/api/status
+```
+
