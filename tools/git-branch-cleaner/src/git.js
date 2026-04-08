@@ -1,9 +1,7 @@
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import fs from 'fs';
 import path from 'path';
-
-const execAsync = promisify(exec);
+import { runCommand } from './command.js';
+import { assertSafeGitRefName } from './sanitize.js';
 
 // Find all git repositories in a directory
 export async function scanRepositories(scanPath) {
@@ -40,11 +38,15 @@ export async function scanRepositories(scanPath) {
 // Get all branches for a repository
 export async function getBranches(repoPath, config) {
   try {
-    const { stdout: currentBranch } = await execAsync('git rev-parse --abbrev-ref HEAD', { cwd: repoPath });
+    const { stdout: currentBranch } = await runCommand('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: repoPath });
     const current = currentBranch.trim();
 
     // Get all local branches
-    const { stdout } = await execAsync('git branch --format="%(refname:short)|%(committerdate:iso8601)|%(committername)|%(subject)"', { cwd: repoPath });
+    const { stdout } = await runCommand(
+      'git',
+      ['branch', '--format=%(refname:short)|%(committerdate:iso8601)|%(committername)|%(subject)'],
+      { cwd: repoPath }
+    );
 
     const branches = [];
     const lines = stdout.trim().split('\n');
@@ -98,13 +100,17 @@ export async function getBranches(repoPath, config) {
 
 // Check if a branch is merged into any base branch
 async function checkIfMerged(repoPath, branchName, baseBranches) {
+  assertSafeGitRefName(branchName, 'branch');
+
   for (const baseBranch of baseBranches) {
     try {
+      assertSafeGitRefName(baseBranch, 'base branch');
+
       // Check if base branch exists
-      await execAsync(`git rev-parse --verify ${baseBranch}`, { cwd: repoPath });
+      await runCommand('git', ['rev-parse', '--verify', baseBranch], { cwd: repoPath });
 
       // Check if branch is merged
-      const { stdout } = await execAsync(`git branch --merged ${baseBranch}`, { cwd: repoPath });
+      const { stdout } = await runCommand('git', ['branch', '--merged', baseBranch], { cwd: repoPath });
       const mergedBranches = stdout.split('\n').map(b => b.trim().replace(/^\* /, ''));
 
       if (mergedBranches.includes(branchName)) {
@@ -121,12 +127,16 @@ async function checkIfMerged(repoPath, branchName, baseBranches) {
 
 // Get how many commits ahead/behind a branch is
 async function getAheadBehind(repoPath, branchName, baseBranches) {
+  assertSafeGitRefName(branchName, 'branch');
+
   for (const baseBranch of baseBranches) {
     try {
-      await execAsync(`git rev-parse --verify ${baseBranch}`, { cwd: repoPath });
+      assertSafeGitRefName(baseBranch, 'base branch');
+      await runCommand('git', ['rev-parse', '--verify', baseBranch], { cwd: repoPath });
 
-      const { stdout } = await execAsync(
-        `git rev-list --left-right --count ${baseBranch}...${branchName}`,
+      const { stdout } = await runCommand(
+        'git',
+        ['rev-list', '--left-right', '--count', `${baseBranch}...${branchName}`],
         { cwd: repoPath }
       );
 
@@ -146,8 +156,9 @@ export async function deleteBranches(repoPath, branchNames, force = false) {
 
   for (const branchName of branchNames) {
     try {
+      assertSafeGitRefName(branchName, 'branch');
       const flag = force ? '-D' : '-d';
-      await execAsync(`git branch ${flag} "${branchName}"`, { cwd: repoPath });
+      await runCommand('git', ['branch', flag, branchName], { cwd: repoPath });
 
       results.push({
         branch: branchName,
@@ -169,8 +180,8 @@ export async function deleteBranches(repoPath, branchNames, force = false) {
 // Get repository status
 export async function getRepoStatus(repoPath) {
   try {
-    const { stdout: statusOut } = await execAsync('git status --porcelain', { cwd: repoPath });
-    const { stdout: currentBranch } = await execAsync('git rev-parse --abbrev-ref HEAD', { cwd: repoPath });
+    const { stdout: statusOut } = await runCommand('git', ['status', '--porcelain'], { cwd: repoPath });
+    const { stdout: currentBranch } = await runCommand('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: repoPath });
 
     const hasChanges = statusOut.trim().length > 0;
 

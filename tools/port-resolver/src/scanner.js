@@ -1,7 +1,5 @@
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
+import { runCommand } from './command.js';
+import { terminateProcess } from './process.js';
 
 let cachedPorts = [];
 let isScanning = false;
@@ -38,14 +36,24 @@ async function getPorts() {
 }
 
 async function getPortsUnix() {
-  try {
-    // Try lsof first (more detailed)
-    const { stdout } = await execAsync('lsof -iTCP -sTCP:LISTEN -n -P 2>/dev/null || netstat -tlnp 2>/dev/null || ss -tlnp 2>/dev/null');
-    return parseUnixOutput(stdout);
-  } catch (error) {
-    console.error('Error running lsof/netstat:', error.message);
-    return [];
+  const commands = [
+    ['lsof', ['-iTCP', '-sTCP:LISTEN', '-n', '-P']],
+    ['netstat', ['-tlnp']],
+    ['ss', ['-tlnp']]
+  ];
+
+  for (const [command, args] of commands) {
+    try {
+      const { stdout } = await runCommand(command, args, { timeout: 5000 });
+      if (stdout?.trim()) {
+        return parseUnixOutput(stdout);
+      }
+    } catch (error) {
+      continue;
+    }
   }
+
+  return [];
 }
 
 function parseUnixOutput(output) {
@@ -119,8 +127,13 @@ function parseUnixOutput(output) {
 
 async function getPortsWindows() {
   try {
-    const { stdout } = await execAsync('netstat -ano | findstr LISTENING');
-    return parseWindowsOutput(stdout);
+    const { stdout } = await runCommand('netstat', ['-ano'], { timeout: 5000 });
+    const listening = stdout
+      .split('\n')
+      .filter(line => line.includes('LISTENING'))
+      .join('\n');
+
+    return parseWindowsOutput(listening);
   } catch (error) {
     console.error('Error running netstat:', error.message);
     return [];
@@ -155,14 +168,8 @@ function parseWindowsOutput(output) {
 }
 
 export async function killProcess(pid) {
-  const platform = process.platform;
-
   try {
-    if (platform === 'win32') {
-      await execAsync(`taskkill /PID ${pid} /F`);
-    } else {
-      await execAsync(`kill -9 ${pid}`);
-    }
+    await terminateProcess(pid);
     return { success: true, message: `Process ${pid} killed` };
   } catch (error) {
     return { success: false, message: error.message };
@@ -184,3 +191,5 @@ export function startScanner(config) {
 
   console.log('🔄 Port scanner started');
 }
+
+export { parseUnixOutput, parseWindowsOutput };
